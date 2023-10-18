@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api")
@@ -19,7 +20,15 @@ public class UserController {
   private UserRepository userRepository;
 
   @PostMapping("/users")
-  public ResponseEntity CreateUser(@RequestBody UserModel userModel) {
+  public ResponseEntity CreateUser(@RequestBody UserModel userModel, HttpServletRequest request) {
+
+    var authorization = request.getHeader("Authorization");
+    var token = authorization.substring("Baerer".length()).trim();
+
+    if (!token.equals("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9")) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Sem permissão para cadastrar um usuário. Verifique seu acesso /token/.");
+    }
 
     var user = this.userRepository.findByUsername(userModel.getUsername());
 
